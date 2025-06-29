@@ -67,7 +67,7 @@ export class AuthService {
 
     // Send verification email
     try {
-      await this.emailService.sendEmailVerification(email, firstName, emailVerificationToken);
+      await this.emailService.sendVerificationEmail(email, firstName, emailVerificationToken);
     } catch (error) {
       this.logger.error(`Failed to send verification email to ${email}`, error.stack, 'AuthService');
     }
@@ -277,7 +277,7 @@ export class AuthService {
     user.emailVerificationTokenExpires = emailVerificationTokenExpires;
     await this.userRepository.save(user);
 
-    await this.emailService.sendEmailVerification(email, user.firstName, emailVerificationToken);
+    await this.emailService.sendVerificationEmail(email, user.firstName, emailVerificationToken);
 
     return { message: 'Verification email sent' };
   }
@@ -299,7 +299,7 @@ export class AuthService {
     user.passwordResetTokenExpires = passwordResetTokenExpires;
     await this.userRepository.save(user);
 
-    await this.emailService.sendPasswordReset(email, user.firstName, passwordResetToken);
+    await this.emailService.sendPasswordResetEmail(email, user.firstName, passwordResetToken);
 
     this.logger.logSecurity('Password Reset Requested', { email, userId: user.id });
 
