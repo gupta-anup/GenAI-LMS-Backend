@@ -1,0 +1,6 @@
+export const APP_CONSTANTS = {
+  DEFAULT_PAGE_SIZE: 10,
+  MAX_PAGE_SIZE: 100,
+  JWT_EXPIRY: '24h',
+  BCRYPT_ROUNDS: 12,
+} as const;
