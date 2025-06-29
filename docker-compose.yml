@@ -6,9 +6,9 @@ services:
     environment:
       POSTGRES_DB: genai_lms
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -27,7 +27,7 @@ services:
       - postgres
       - redis
     environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5433/genai_lms
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/genai_lms
       - REDIS_URL=redis://redis:6379
     volumes:
       - .:/app
