@@ -1,6 +1,7 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BaseEntity } from './base.entity';
+import { Course } from './course.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -81,6 +82,9 @@ export class User extends BaseEntity {
   // Relations will be added later when Role entities are created
   // @OneToMany('UserRole', 'user')
   // userRoles: any[];
+
+  @OneToMany(() => Course, (course) => course.user)
+  courses: Course[];
 
   // Virtual fields
   get fullName(): string {
