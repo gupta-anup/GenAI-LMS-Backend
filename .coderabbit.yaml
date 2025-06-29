@@ -1,0 +1,237 @@
+# CodeRabbit Configuration
+# This file configures CodeRabbit AI code review settings for the GenAI LMS Backend
+
+# Language and framework specific settings
+language: typescript
+framework: nestjs
+
+# Review settings
+reviews:
+  # Enable automatic reviews on all pull requests
+  auto_review: true
+  
+  # Review all branches (not just main/master)
+  review_all_branches: true
+  
+  # Enable inline comments
+  inline_comments: true
+  
+  # Enable summary comments
+  summary_comments: true
+  
+  # Review drafts as well
+  review_drafts: false
+
+# What to review
+scope:
+  # File patterns to include in reviews
+  include:
+    - "src/**/*.ts"
+    - "src/**/*.js"
+    - "test/**/*.ts"
+    - "test/**/*.js"
+    - "*.json"
+    - "*.md"
+    - "*.yml"
+    - "*.yaml"
+    - "Dockerfile"
+    - "docker-compose*.yml"
+  
+  # File patterns to exclude from reviews
+  exclude:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - "coverage/**"
+    - "*.log"
+    - ".env*"
+    - "package-lock.json"
+    - "yarn.lock"
+
+# Review focus areas
+focus:
+  # Code quality
+  code_quality: true
+  
+  # Security vulnerabilities
+  security: true
+  
+  # Performance issues
+  performance: true
+  
+  # Best practices
+  best_practices: true
+  
+  # Documentation
+  documentation: true
+  
+  # Testing
+  testing: true
+  
+  # TypeScript specific
+  typescript:
+    strict_types: true
+    unused_imports: true
+    prefer_interfaces: true
+  
+  # NestJS specific
+  nestjs:
+    decorators: true
+    dependency_injection: true
+    error_handling: true
+    validation: true
+    guards_interceptors: true
+
+# Specific rules for this project
+rules:
+  # Enforce consistent naming conventions
+  naming_conventions:
+    - type: "class"
+      pattern: "PascalCase"
+    - type: "interface"
+      pattern: "PascalCase"
+      prefix: "I"
+    - type: "enum"
+      pattern: "PascalCase"
+    - type: "function"
+      pattern: "camelCase"
+    - type: "variable"
+      pattern: "camelCase"
+    - type: "constant"
+      pattern: "UPPER_SNAKE_CASE"
+  
+  # Database and ORM specific
+  database:
+    check_migrations: true
+    entity_validation: true
+    repository_patterns: true
+  
+  # API specific
+  api:
+    rest_conventions: true
+    swagger_documentation: true
+    error_responses: true
+    validation_pipes: true
+  
+  # Security specific
+  security:
+    auth_patterns: true
+    input_validation: true
+    sql_injection: true
+    xss_prevention: true
+    cors_configuration: true
+  
+  # Email and notifications
+  email:
+    template_validation: true
+    configuration_security: true
+
+# Custom prompts for specific areas
+prompts:
+  security: |
+    Pay special attention to:
+    - Authentication and authorization logic
+    - Input validation and sanitization
+    - SQL injection prevention
+    - Environment variable usage
+    - CORS configuration
+    - Rate limiting implementation
+  
+  database: |
+    Review for:
+    - Proper entity relationships
+    - Migration safety
+    - Query optimization
+    - Transaction usage
+    - Repository pattern implementation
+  
+  api: |
+    Check for:
+    - RESTful conventions
+    - Proper HTTP status codes
+    - Request/response validation
+    - Error handling middleware
+    - Swagger documentation completeness
+  
+  testing: |
+    Ensure:
+    - Unit test coverage for business logic
+    - Integration test coverage for API endpoints
+    - E2E test coverage for critical flows
+    - Proper mocking and test isolation
+    - Test naming conventions
+
+# Integration settings
+integrations:
+  # GitHub settings
+  github:
+    # Post review comments as suggestions when possible
+    suggestions: true
+    
+    # Request changes for critical issues
+    request_changes_on:
+      - security_vulnerability
+      - breaking_change
+      - critical_bug
+    
+    # Auto-approve simple changes (optional)
+    auto_approve:
+      enabled: false
+      conditions:
+        - documentation_only: true
+        - small_refactor: true
+      max_files_changed: 3
+      max_lines_changed: 50
+
+# Notification settings
+notifications:
+  # Notify on critical issues
+  critical_issues: true
+  
+  # Summary after review completion
+  review_summary: true
+  
+  # Mention specific team members for certain areas
+  mentions:
+    security_issues: ["@security-team"]
+    database_changes: ["@backend-team"]
+    api_changes: ["@api-team"]
+
+# Custom labels to apply based on review findings
+labels:
+  security_review: "security"
+  performance_review: "performance" 
+  breaking_change: "breaking-change"
+  needs_tests: "needs-tests"
+  documentation_needed: "docs-needed"
+
+# Comment templates
+comment_templates:
+  security_issue: |
+    🔒 **Security Issue Detected**
+    
+    This change may introduce a security vulnerability. Please review and address the following:
+    
+    {issue_description}
+    
+    **Recommendations:**
+    {recommendations}
+  
+  performance_concern: |
+    ⚡ **Performance Concern**
+    
+    This change may impact performance:
+    
+    {issue_description}
+    
+    **Suggestions:**
+    {suggestions}
+  
+  best_practice: |
+    💡 **Best Practice Suggestion**
+    
+    Consider the following improvement:
+    
+    {suggestion}
+    
+    This follows {framework} best practices and will improve code maintainability.
