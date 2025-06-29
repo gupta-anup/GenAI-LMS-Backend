@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { EmailTemplateLoader } from './email-template-loader';
 
 export interface EmailOptions {
   to: string;
@@ -18,6 +17,9 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private configService: ConfigService) {
+    // Verify email configuration
+    this.validateEmailConfig();
+    
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('email.host'),
       port: this.configService.get<number>('email.port'),
@@ -29,27 +31,40 @@ export class EmailService {
     });
   }
 
+  private validateEmailConfig(): void {
+    const requiredFields = ['host', 'user', 'password'];
+    const missing: string[] = [];
+
+    requiredFields.forEach(field => {
+      const value = this.configService.get<string>(`email.${field}`);
+      if (!value) {
+        missing.push(field);
+      }
+    });
+
+    if (missing.length > 0) {
+      this.logger.warn(`Missing email configuration: ${missing.join(', ')}`);
+      this.logger.warn('Email sending may fail. Please check your environment variables.');
+    } else {
+      this.logger.log('Email configuration validated successfully');
+    }
+  }
+
   private loadTemplate(templateName: string, variables: Record<string, string>): string {
     try {
-      const templatePath = join(__dirname, '..', '..', 'templates', 'email', `${templateName}.html`);
-      let template = readFileSync(templatePath, 'utf-8');
-      
-      // Replace variables in template
-      Object.keys(variables).forEach(key => {
-        const regex = new RegExp(`{{${key}}}`, 'g');
-        template = template.replace(regex, variables[key]);
-      });
-      
-      return template;
+      this.logger.debug(`Loading template: ${templateName} with variables: ${JSON.stringify(Object.keys(variables))}`);
+      const renderedTemplate = EmailTemplateLoader.renderTemplate(templateName, variables);
+      this.logger.debug(`Successfully loaded and rendered template: ${templateName}`);
+      return renderedTemplate;
     } catch (error) {
-      this.logger.warn(`Could not load template ${templateName}, using fallback`);
+      this.logger.warn(`Could not load template ${templateName}, using fallback: ${error.message}`);
       return this.getFallbackTemplate(templateName, variables);
     }
   }
 
   private getFallbackTemplate(templateName: string, variables: Record<string, string>): string {
     switch (templateName) {
-      case 'verification':
+      case 'email-verification':
         return `
           <h2>Email Verification</h2>
           <p>Hello ${variables.firstName},</p>
@@ -65,7 +80,7 @@ export class EmailService {
           <p>Hello ${variables.firstName},</p>
           <p>Welcome to our platform! Your email has been verified successfully.</p>
           <p>You can now access all features of our Learning Management System.</p>
-          <a href="${variables.loginUrl}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Get Started</a>
+          <a href="${variables.frontendUrl}/dashboard" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Get Started</a>
         `;
       case 'password-reset':
         return `
@@ -77,6 +92,14 @@ export class EmailService {
           <p>${variables.resetUrl}</p>
           <p>This link will expire in 1 hour.</p>
           <p>If you didn't request this, please ignore this email.</p>
+        `;
+      case 'password-change-notification':
+        return `
+          <h2>Password Changed Successfully</h2>
+          <p>Hello ${variables.firstName},</p>
+          <p>Your password for account ${variables.email} has been changed successfully on ${variables.timestamp}.</p>
+          <p>If you did not make this change, please contact our support team immediately.</p>
+          <p>For your security, all active sessions have been logged out.</p>
         `;
       default:
         return `<p>Email content not available</p>`;
@@ -103,7 +126,7 @@ export class EmailService {
   async sendVerificationEmail(to: string, firstName: string, verificationToken: string): Promise<void> {
     const verificationUrl = `${this.configService.get<string>('app.frontendUrl')}/verify-email?token=${verificationToken}`;
     
-    const html = this.loadTemplate('verification', {
+    const html = this.loadTemplate('email-verification', {
       firstName,
       verificationUrl,
     });
@@ -116,11 +139,11 @@ export class EmailService {
   }
 
   async sendWelcomeEmail(to: string, firstName: string): Promise<void> {
-    const loginUrl = `${this.configService.get<string>('app.frontendUrl')}/login`;
+    const frontendUrl = this.configService.get<string>('app.frontendUrl') || 'http://localhost:3000';
     
     const html = this.loadTemplate('welcome', {
       firstName,
-      loginUrl,
+      frontendUrl,
     });
 
     await this.sendEmail({
@@ -145,14 +168,31 @@ export class EmailService {
     });
   }
 
+  /**
+   * Get available email templates for debugging
+   */
+  getAvailableTemplates(): string[] {
+    return EmailTemplateLoader.getAvailableTemplates();
+  }
+
+  /**
+   * Test template rendering without sending email
+   */
+  async testTemplate(templateName: string, variables: Record<string, any>): Promise<string> {
+    try {
+      return this.loadTemplate(templateName, variables);
+    } catch (error) {
+      this.logger.error(`Failed to test template ${templateName}:`, error);
+      throw error;
+    }
+  }
+
   async sendPasswordChangeNotification(to: string, firstName: string): Promise<void> {
-    const html = `
-      <h2>Password Changed Successfully</h2>
-      <p>Hello ${firstName},</p>
-      <p>Your password has been changed successfully.</p>
-      <p>If you did not make this change, please contact our support team immediately.</p>
-      <p>For your security, all active sessions have been logged out.</p>
-    `;
+    const html = this.loadTemplate('password-change-notification', {
+      firstName,
+      email: to,
+      timestamp: new Date().toLocaleString(),
+    });
 
     await this.sendEmail({
       to,
