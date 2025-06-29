@@ -1,7 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from './entities/user.entity';
+import { 
+  User, 
+  Role, 
+  Course, 
+  Lesson, 
+  Quiz, 
+  QuizQuestion, 
+  Resource, 
+  Enrollment 
+} from './entities';
 
 @Module({
   imports: [
@@ -14,7 +23,7 @@ import { User } from './entities/user.entity';
         username: configService.get<string>('database.username'),
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
-        entities: [User],
+        entities: [User, Role, Course, Lesson, Quiz, QuizQuestion, Resource, Enrollment],
         synchronize: configService.get<boolean>('database.synchronize'),
         logging: configService.get<boolean>('database.logging'),
         migrations: [__dirname + '/migrations/*{.ts,.js}'],

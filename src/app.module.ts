@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './shared/email/email.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { CourseGenerationModule } from './modules/course-generation';
 import { appConfig, authConfig, databaseConfig, emailConfig, loggerConfig } from './config';
 
 @Module({
@@ -21,6 +22,7 @@ import { appConfig, authConfig, databaseConfig, emailConfig, loggerConfig } from
     EmailModule,
     AuthModule,
     HealthModule,
+    CourseGenerationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
